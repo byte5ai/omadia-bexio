@@ -1,0 +1,24 @@
+{
+  "name": "@omadia/integration-bexio",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "main": "dist/plugin.js",
+  "description": "Bexio (Swiss SME accounting/ERP/CRM) integration for omadia — PAT-authenticated read-only Bexio API client. Publishes the 'bexio.client' service and contributes read tools for contacts, invoices, quotes, items and projects.",
+  "license": "MIT",
+  "homepage": "https://github.com/byte5ai/omadia-bexio",
+  "repository": { "type": "git", "url": "https://github.com/byte5ai/omadia-bexio.git" },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "node --test",
+    "build": "node scripts/build-zip.mjs",
+    "clean": "rm -rf dist out"
+  },
+  "peerDependencies": { "@omadia/plugin-api": "*" },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "esbuild": "^0.24.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": { "node": ">=20" }
+}

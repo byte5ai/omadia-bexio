@@ -1,0 +1,168 @@
+schema_version: "1"
+
+# ===========================================================================
+# @omadia/integration-bexio — Bexio (Swiss SME accounting/ERP/CRM)
+# A kind:integration plugin. Publishes a shared PAT-authenticated Bexio API
+# client ('bexio.client') + a short-TTL read cache ('bexio.cache'), and
+# contributes six read-only resource tools + a generic bexio_get.
+# Auth: Bexio Personal Access Token (bearer). READ-ONLY (no writes in v0.1.0).
+# ===========================================================================
+
+identity:
+  id: "@omadia/integration-bexio"
+  kind: "integration"
+  domain: "bexio"
+  name: "Bexio (Swiss SME software)"
+  version: "0.2.0"
+  description: "Bexio connector for omadia. PAT-authenticated read-only REST client. Publishes the 'bexio.client' + 'bexio.cache' services and contributes read tools for contacts, invoices, quotes (Offerten), orders, items and projects."
+  authors:
+    - name: "byte5 GmbH"
+      email: "info@omadia.ai"
+      url: "https://omadia.ai"
+  license: "MIT"
+  homepage: "https://github.com/byte5ai/omadia-bexio"
+  icon: "./assets/icon.svg"
+  categories:
+    - "integration"
+    - "crm"
+
+compat:
+  core: ">=1.0 <2.0"
+  node: ">=20"
+
+depends_on: []
+
+lifecycle:
+  entry: "dist/plugin.js"
+  uninstall_policy:
+    entities: "delete"
+    memory: "delete"
+    secrets: "delete"
+
+setup:
+  guide:
+    en: |
+      ## Connect Bexio
+
+      This integration talks to the **Bexio API** using a **Personal Access
+      Token (PAT)** as a bearer token — no interactive sign-in.
+
+      ### 1. Create a Personal Access Token
+      1. Go to [developer.bexio.com/pat](https://developer.bexio.com/pat) and
+         sign in with your Bexio account.
+      2. Create a new token, give it a name (e.g. "omadia"), and copy the token
+         **value** immediately (it is shown only once).
+
+      > A PAT has your account's full default scopes and is valid for **6
+      > months**. Note the expiry and re-issue before it lapses. Revoke a token
+      > any time on the same page.
+
+      ### 2. Fill in the field below
+      | Field | Value |
+      |---|---|
+      | **API Token** | The PAT value from step 1 |
+
+      Install — the connection is verified in the background with a
+      `GET /3.0/permissions` call (watch the plugin logs for `connected` or a
+      `permissions probe failed` warning).
+
+      ### Troubleshooting
+      - **401 / 403** — the PAT is wrong, expired, or revoked. Re-issue at
+        developer.bexio.com/pat.
+      - **429** — Bexio rate limit (per minute). Retry after the time in the
+        `RateLimit-Reset` header.
+      - **Cannot reach the host** — `api.bexio.com` must be in the network
+        allow-list (it is, by default).
+    de: |
+      ## Bexio verbinden
+
+      Diese Integration spricht die **Bexio-API** über einen **Personal Access
+      Token (PAT)** als Bearer-Token — kein interaktiver Login.
+
+      ### 1. Personal Access Token erstellen
+      1. [developer.bexio.com/pat](https://developer.bexio.com/pat) öffnen und
+         mit dem Bexio-Konto anmelden.
+      2. Neuen Token erstellen, benennen (z.B. „omadia") und den **Token-Wert**
+         sofort kopieren (wird nur einmal angezeigt).
+
+      > Ein PAT hat die vollen Standard-Scopes des Kontos und ist **6 Monate**
+      > gültig. Ablauf notieren und rechtzeitig neu ausstellen. Widerruf
+      > jederzeit auf derselben Seite möglich.
+
+      ### 2. Feld unten ausfüllen
+      | Feld | Wert |
+      |---|---|
+      | **API Token** | Der PAT-Wert aus Schritt 1 |
+
+      Installieren — die Verbindung wird im Hintergrund per
+      `GET /3.0/permissions` geprüft (in den Logs erscheint `connected` bzw.
+      eine `permissions probe failed`-Warnung).
+
+      ### Fehlersuche
+      - **401 / 403** — PAT falsch, abgelaufen oder widerrufen. Neu ausstellen
+        auf developer.bexio.com/pat.
+      - **429** — Bexio-Rate-Limit (pro Minute). Nach der Zeit im Header
+        `RateLimit-Reset` erneut versuchen.
+      - **Host nicht erreichbar** — `api.bexio.com` muss in der Netzwerk-
+        Allowlist stehen (Standard).
+  fields:
+    - key: "bexio_api_token"
+      type: "secret"
+      label: "API Token"
+      help: "Bexio Personal Access Token from developer.bexio.com/pat. Stored encrypted in the vault. Maps to BEXIO_API_TOKEN."
+      required: true
+    - key: "bexio_base_url"
+      type: "string"
+      label: "API Base URL"
+      help: "Bexio API base. Default https://api.bexio.com — only change for a proxy/sandbox."
+      required: false
+      default: "https://api.bexio.com"
+    - key: "bexio_max_bytes"
+      type: "string"
+      label: "Max response size (bytes)"
+      help: "Caps a single Bexio response to prevent memory blow-ups. Default 1048576 (1 MiB)."
+      required: false
+      default: "1048576"
+    - key: "bexio_cache_ttl_seconds"
+      type: "string"
+      label: "Read cache TTL (seconds)"
+      help: "How long identical reads are cached in-process. Default 60."
+      required: false
+      default: "60"
+  self_test: false
+
+playbook:
+  when_to_use: |
+    Use for questions about data held in Bexio (Swiss SME accounting/ERP/CRM):
+    contacts (companies + people), invoices, quotes/Offerten, orders,
+    items/articles, and projects. All tools are READ-ONLY. Tool selection:
+      - `bexio_contacts` — people & companies. Free-text `search` matches
+        name/e-mail; pass raw `criteria` for exact/AND queries.
+      - `bexio_invoices` / `bexio_quotes` / `bexio_orders` — sales documents
+        (kb_invoice / kb_offer / kb_order). `search` matches title/document nr.
+      - `bexio_items` — articles/products; `search` matches internal name/code.
+      - `bexio_projects` — projects; `search` matches name/number.
+      - `bexio_get` — fetch one record by id from an allow-listed resource,
+        once you know the id (e.g. from a prior list/search).
+    Prefer `criteria` with `=`/`in` for precise lookups; use `limit`/`offset`
+    to page. There is no write path in this version.
+
+permissions:
+  memory:
+    reads: []
+    writes: []
+  graph:
+    reads: []
+    writes: []
+  network:
+    outbound:
+      - "api.bexio.com"
+  filesystem:
+    scratch: false
+
+integrations:
+  - name: "Bexio"
+    scopes:
+      - "read: contacts, invoices, quotes, orders, items, projects (Personal Access Token, full default scope)"
+
+provides: []
