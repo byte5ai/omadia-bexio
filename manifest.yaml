@@ -13,7 +13,7 @@ identity:
   kind: "integration"
   domain: "bexio"
   name: "Bexio (Swiss SME software)"
-  version: "0.2.0"
+  version: "0.2.1"
   description: "Bexio connector for omadia. PAT-authenticated read-only REST client. Publishes the 'bexio.client' + 'bexio.cache' services and contributes read tools for contacts, invoices, quotes (Offerten), orders, items and projects."
   authors:
     - name: "byte5 GmbH"
