@@ -20,7 +20,7 @@
  */
 
 import { spawnSync } from 'node:child_process';
-import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, statSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -70,7 +70,17 @@ const stageDir = join(pkgRoot, 'out', stageName);
 rmSync(stageDir, { recursive: true, force: true });
 mkdirSync(stageDir, { recursive: true });
 
-const INCLUDE = ['manifest.yaml', 'package.json', 'dist', 'assets', 'README.md', 'LICENSE', 'NOTICE'];
+const INCLUDE = ['manifest.yaml', 'dist', 'assets', 'README.md', 'LICENSE', 'NOTICE'];
+// package.json is staged, not copied: devDependencies are dropped first.
+// Nothing installs them from a plugin ZIP. The published 0.2.0 artifact also
+// carried an `overrides` entry pointing at a sibling checkout
+// (`file:../odoo-bot/middleware/plugin-api`) — that entry is already gone from
+// this repo, but it shows how quickly build-time wiring leaks into a public
+// artifact when package.json is shipped verbatim.
+const stagedPkg = { ...pkg };
+delete stagedPkg.devDependencies;
+writeFileSync(join(stageDir, 'package.json'), `${JSON.stringify(stagedPkg, null, 2)}\n`);
+
 for (const entry of INCLUDE) {
   const src = join(pkgRoot, entry);
   if (!existsSync(src)) continue;
