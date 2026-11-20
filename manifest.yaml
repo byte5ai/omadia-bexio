@@ -13,7 +13,7 @@ identity:
   kind: "integration"
   domain: "bexio"
   name: "Bexio (Swiss SME software)"
-  version: "0.2.1"
+  version: "0.3.0"
   description: "Bexio connector for omadia. PAT-authenticated read-only REST client. Publishes the 'bexio.client' + 'bexio.cache' services and contributes read tools for contacts, invoices, quotes (Offerten), orders, items and projects."
   authors:
     - name: "byte5 GmbH"
@@ -27,7 +27,7 @@ identity:
     - "crm"
 
 compat:
-  core: ">=1.0 <2.0"
+  core: ">=1.78.0 <2.0"
   node: ">=20"
 
 depends_on: []
@@ -164,5 +164,28 @@ integrations:
   - name: "Bexio"
     scopes:
       - "read: contacts, invoices, quotes, orders, items, projects (Personal Access Token, full default scope)"
+
+capabilities:
+  - id: "bexio_contacts"
+    description: "Read contacts (companies + people) from Bexio."
+    side_effects: "read"
+  - id: "bexio_invoices"
+    description: "Read invoices (kb_invoice) from Bexio."
+    side_effects: "read"
+  - id: "bexio_quotes"
+    description: "Read quotes/Offerten (kb_offer) from Bexio."
+    side_effects: "read"
+  - id: "bexio_orders"
+    description: "Read orders (kb_order) from Bexio."
+    side_effects: "read"
+  - id: "bexio_items"
+    description: "Read items/articles (products) from Bexio."
+    side_effects: "read"
+  - id: "bexio_projects"
+    description: "Read projects (pr_project) from Bexio."
+    side_effects: "read"
+  - id: "bexio_get"
+    description: "Fetch one Bexio record by id from an allow-listed resource."
+    side_effects: "read"
 
 provides: []
